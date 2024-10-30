@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id       Int    @id @default(autoincrement())
+  name     String
+  username String
+  password String
+  level    String @default("admin")
+  status   String @default("use")
+}
+
+model Taste {
+  id      Int    @id @default(autoincrement())
+  level   String
+  comment String
+  status  String @default("use")
+  menus   Menu[] @relation("MenuTaste")
+  orderItems OrderItem[]
+}
+
+model Milk {
+  id      Int    @id @default(autoincrement())
+  name    String
+  price   Int
+  comment String
+  status  String @default("use")
+  menus   Menu[] @relation("MenuMilks")
+  orderItems OrderItem[]
+}
+
+model Size {
+  id      Int    @id @default(autoincrement())
+  name    String
+  price   Int
+  comment String
+  status  String @default("use")
+  menus   Menu[] @relation("MenuSize")
+  orderItems OrderItem[]
+}
+
+model Menu {
+  id           Int          @id @default(autoincrement())
+  name         String
+  price        Float
+  img          String
+  comment      String
+  sizes        Size[]        @relation("MenuSize")
+  milkTypes    Milk[]        @relation("MenuMilks")
+  tastes       Taste[]       @relation("MenuTaste")
+  temperatures Temperature[] @relation("MenuTemperatures")
+  status       String        @default("use")
+  orderItems   OrderItem[]
+}
+
+model Temperature {
+  id           Int          @id @default(autoincrement())
+  temperature  String
+  status       String        @default("use")
+  menus        Menu[]        @relation("MenuTemperatures")
+  orderItems   OrderItem[]
+}
+
+model Table {
+  id      Int    @id @default(autoincrement())
+  tableId Int    @unique
+  qrcode  String
+  token   String
+  status  String @default("use")
+  orderItem OrderItem[]
+  order     Order[]
+}
+
+
+
+model OrderItem {
+  id            Int          @id @default(autoincrement())
+  name          String
+  menu          Menu?         @relation(fields: [menuId], references: [id])
+  menuId        Int?
+  size          Size?        @relation(fields: [sizeId], references: [id])
+  sizeId        Int?         
+  milk          Milk?        @relation(fields: [milkId], references: [id])
+  milkId        Int?         
+  taste         Taste?       @relation(fields: [tasteId], references: [id])
+  tasteId       Int?        
+  temperature   Temperature? @relation(fields: [temperatureId], references: [id])
+  temperatureId Int?
+  order         Order?         @relation(fields: [orderId], references: [id])
+  orderId       Int?         
+  quantity      Int          @default(1)
+  price         Float
+  createdAt     DateTime     @default(now())
+  status        String       @default("use")
+  table         Table        @relation(fields: [tableId], references: [tableId])
+  tableId       Int
+  comment       String
+  beanType      String?      
+  roastMethod   String?      
+}
+
+
+model Order {
+  id            Int          @id @default(autoincrement())
+  table         Table        @relation(fields: [tableId], references: [tableId])
+  tableId       Int
+  items         OrderItem[] 
+  totalPrice    Float 
+  status        String       @default("pending") 
+  createdAt     DateTime     @default(now()) 
+}
