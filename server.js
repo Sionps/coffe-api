@@ -14,12 +14,13 @@ const size = require('./Controller/SizeController')
 const menu = require('./Controller/MenuController')
 const table = require('./Controller/TableController')
 const orderItem = require('./Controller/OrderItemControllder')
-
+const report = require('./Controller/ReportController')
 
 app.use('/uploads', express.static('uploads'))
 app.use(cors())
 app.use(bodyParser.json())
 app.use(fileUpload())
+
 
 app.post('/api/user/signIn', async (req, res) => {
     const { username, password } = req.body;
@@ -61,6 +62,15 @@ app.get('/api/temperature/list', async (req, res) => {
   }catch(error){
     return res.status(500).send({ error : error.message})
   }
+})
+
+
+// ----- report ----- //
+app.post('/api/report/sumPerDayInYearAndMonth', async (req,res) => {
+    report.sumPerDayInYearAndMonth(req,res)
+})
+app.post('/api/report/sumPerMonthInYear', async (req,res) => {
+    report.sumPerMonthInYear(req,res)
 })
 
 // ----- taste ----- //

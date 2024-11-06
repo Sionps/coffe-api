@@ -114,4 +114,15 @@ model Order {
   totalPrice    Float 
   status        String       @default("pending") 
   createdAt     DateTime     @default(now()) 
+  bill          Bill?
+}
+
+model Bill {
+  id          Int      @id @default(autoincrement())
+  order       Order    @relation(fields: [orderId], references: [id])
+  orderId     Int @unique
+  fileName    String
+  totalAmount Float
+  createdAt   DateTime @default(now())
+  status      String @default("use") 
 }

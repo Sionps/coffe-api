@@ -8,7 +8,7 @@ module.exports = {
         try {
             const tableId = req.body.tableId;
             const token = crypto.randomBytes(16).toString('hex');
-            const qrUrl = `https://coffe-frontend.vercel.app/order/orderpage?tableId=${tableId}&token=${token}`;
+            const qrUrl = `http://localhost:3000/order/orderpage?tableId=${tableId}&token=${token}`;
             const qrCode = await Qrcode.toDataURL(qrUrl);
 
             await prisma.table.create({

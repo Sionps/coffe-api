@@ -1,5 +1,9 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
+const pdfkit = require('pdfkit');
+const fs = require('fs');
+const dayjs = require('dayjs');
+
 
 module.exports = {
 
@@ -123,29 +127,30 @@ module.exports = {
 
     createOrder: async (req, res) => {
         try {
-             const order = await prisma.order.create({
+            // Create a new order
+            const order = await prisma.order.create({
                 data: {
                     tableId: parseInt(req.body.tableId),
                     totalPrice: req.body.totalPrice
                 }
             });
-    
+            // Update order items related to the order
             await prisma.orderItem.updateMany({
                 where: {
                     tableId: parseInt(req.body.tableId),
                     orderId: null
                 },
                 data: {
-                    orderId: order.id,  
+                    orderId: order.id,
                     status: "success"
                 }
             });
-    
-            return res.send({ message: "success" });
+            return res.send({ message: "success" })
         } catch (error) {
             return res.status(500).send({ error: error.message });
         }
     },
+    
 
     listOrder: async (req, res) => {
         try {
@@ -174,33 +179,146 @@ module.exports = {
 
     removeOrder: async (req, res) => {
         try {
-            await prisma.order.delete({
+            const order = await prisma.order.findUnique({
                 where: {
                     id: parseInt(req.params.id)
                 }
-            })
-            return res.send({ message: "success" })
+            });
+            await prisma.orderItem.deleteMany({
+                where: {
+                    tableId: order.tableId
+                }
+            });
+                await prisma.order.delete({
+                where: {
+                    id: parseInt(req.params.id)
+                }
+            });
+    
+            return res.send({ message: "success" });
         } catch (error) {
             return res.status(500).send({ error: error.message });
         }
     },
+    
 
-    submit: async (req,res) => {
+    submit: async (req, res) => {
         try {
+            // Find the order first to get the tableId
+            const order = await prisma.order.findUnique({
+                where: {
+                    id: parseInt(req.params.id)
+                }
+            });
+
             await prisma.order.update({
-                where:{
+                where: {
                     id: parseInt(req.params.id)
                 },
                 data: {
                     status: "success"
                 }
-            })
-            return res.send({message: "success"})
+            });
+    
+            // Create a bill for the order
+            const paperWidth = 80;
+            const padding = 3;
+    
+            const doc = new pdfkit({
+                size: [paperWidth, 200],
+                margins: {
+                    top: 3,
+                    bottom: 3,
+                    left: 3,
+                    right: 3,
+                },
+            });
+            const fileName = `uploads/bill-${dayjs(new Date()).format('YYYYMMDDHHmmss')}.pdf`;
+            const font = 'Kanit/kanit-regular.ttf';
+    
+            doc.pipe(fs.createWriteStream(fileName));
+    
+            // display logo
+            const imageWidth = 20;
+            const positionX = (paperWidth / 2) - (imageWidth / 2);
+            doc.image('uploads/' + 'promptpay.jpg', positionX, 5, {
+                align: 'center',
+                width: imageWidth,
+                height: 20
+            });
+            doc.moveDown();
+    
+            doc.font(font);
+            doc.fontSize(5).text('*** ใบแจ้งรายการ ***', 20, doc.y + 8);
+            doc.fontSize(8);
+            doc.text("Coffe Shop", padding, doc.y);
+            doc.fontSize(5);
+            doc.text(911);
+            doc.text(`เบอร์โทร: 097-918-0021`);
+            doc.text(`เลขประจำตัวผู้เสียภาษี: 911`);
+            doc.text(`โต๊ะ: ${order.tableId}`, { align: 'center' });
+            doc.text(`วันที่: ${dayjs(new Date()).format('DD/MM/YYYY HH:mm:ss')}`, { align: 'center' });
+            doc.text('รายการอาหาร', { align: 'center' });
+            doc.moveDown();
+    
+            const y = doc.y;
+            doc.fontSize(4);
+            doc.text('รายการ', padding, y);
+            doc.text('ราคา', padding + 18, y, { align: 'right', width: 20 });
+            doc.text('จำนวน', padding + 36, y, { align: 'right', width: 20 });
+            doc.text('รวม', padding + 55, y, { align: 'right' });
+    
+            // line
+            // set border height
+            doc.lineWidth(0.1);
+            doc.moveTo(padding, y + 6).lineTo(paperWidth - padding, y + 6).stroke();
+    
+            // loop order items
+            let sumAmount = 0;
+            const orderItems = await prisma.orderItem.findMany({
+                where: {
+                    orderId: order.id
+                }
+            });
+    
+            orderItems.forEach((item) => {
+                const y = doc.y;
+                doc.text(item.name, padding, y);
+                doc.text(item.price, padding + 18, y, { align: 'right', width: 20 });
+                doc.text(item.quantity, padding + 36, y, { align: 'right', width: 20 });
+                doc.text(item.price * item.quantity, padding + 55, y, { align: 'right' });
+                sumAmount += item.price * item.quantity;
+            });
+    
+            // display amount
+            doc.text(`รวม: ${sumAmount.toLocaleString('th-TH')} บาท`, { align: 'right' });
+            doc.end();
+    
+            await prisma.bill.create({
+                data: {
+                    orderId: order.id,
+                    fileName: fileName,
+                    totalAmount: sumAmount,
+                    createdAt: new Date()
+                }
+            });
+    
+            // Delete order items related to the table
+            await prisma.orderItem.deleteMany({
+                where: {
+                    tableId: order.tableId,
+                    orderId: order.id
+                }
+            });
+    
+            return res.send({ message: "success", fileName: fileName });
         } catch (error) {
-            return res.status(500).send({ error : error.message})
+            return res.status(500).send({ error: error.message });
         }
     },
+    
 
+    
     getTotalRevenue: async (req, res) => {
         try {
             const revenue  = await prisma.order.aggregate({
