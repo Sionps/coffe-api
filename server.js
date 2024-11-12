@@ -4,7 +4,8 @@ const bodyParser = require('body-parser')
 const fileUpload = require('express-fileupload')
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
-const app = express()
+const http = require('http'); 
+const { Server } = require('socket.io')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -16,10 +17,35 @@ const table = require('./Controller/TableController')
 const orderItem = require('./Controller/OrderItemControllder')
 const report = require('./Controller/ReportController')
 
+const app = express()
+const server = http.createServer(app); 
+
+
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+})
+
+io.on("connection", (socket) => {
+  socket.on("new_order", (orderData) => {
+    io.emit("new_order", orderData);
+  })
+  socket.on("disconnect", () => {
+    console.log("a user disconnected");
+  })
+})
+
+orderItem.initialize(io);
+
+
 app.use('/uploads', express.static('uploads'))
 app.use(cors())
 app.use(bodyParser.json())
 app.use(fileUpload())
+
+
 
 
 app.post('/api/user/signIn', async (req, res) => {
@@ -146,6 +172,9 @@ app.delete('/api/table/remove/:id', (req, res) => {
 app.get('/api/table/verify', (req, res) => {
   table.verify(req, res); 
 })
+app.post('/api/table/print', (req, res) => {
+table.print(req, res)  
+})
 
 // ----- order ----- //
 app.post('/api/orderitem/create', (req, res) => {
@@ -184,6 +213,6 @@ app.get('/api/order/listbydate', (req, res) => {
 
 
 
-app.listen(3001, () => {
+server.listen(3001, () => {
     console.log('Server started on port 3001')
 })

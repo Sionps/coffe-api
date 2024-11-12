@@ -3,10 +3,15 @@ const prisma = new PrismaClient()
 const pdfkit = require('pdfkit');
 const fs = require('fs');
 const dayjs = require('dayjs');
+let io
 
+const initialize = (socketIo) => {
+    io = socketIo;
+};
+  
 
 module.exports = {
-
+    initialize,
     createMysteryItem: async (req, res) => {
         try {
             const tableId = parseInt(req.body.tableId);
@@ -127,14 +132,14 @@ module.exports = {
 
     createOrder: async (req, res) => {
         try {
-            // Create a new order
             const order = await prisma.order.create({
                 data: {
                     tableId: parseInt(req.body.tableId),
                     totalPrice: req.body.totalPrice
                 }
             });
-            // Update order items related to the order
+
+
             await prisma.orderItem.updateMany({
                 where: {
                     tableId: parseInt(req.body.tableId),
@@ -145,6 +150,13 @@ module.exports = {
                     status: "success"
                 }
             });
+
+            io.emit("new_order", { 
+                id: order.id,
+                tableId: order.tableId,
+                totalPrice: order.totalPrice
+              });
+
             return res.send({ message: "success" })
         } catch (error) {
             return res.status(500).send({ error: error.message });
