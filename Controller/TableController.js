@@ -4,6 +4,7 @@ const Qrcode = require('qrcode');
 const pdfkit = require('pdfkit');
 const fs = require('fs');
 const dayjs = require('dayjs');
+const crypto = require('crypto');
 
 module.exports = {
     create: async (req, res) => {
