@@ -246,7 +246,7 @@ module.exports = {
                 },
             });
             const fileName = `uploads/bill-${dayjs(new Date()).format('YYYYMMDDHHmmss')}.pdf`;
-            const font = 'Kanit/kanit-regular.ttf';
+            const font = 'Kanit/Kanit-Reqular.ttf';
     
             doc.pipe(fs.createWriteStream(fileName));
     
