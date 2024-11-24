@@ -67,18 +67,6 @@ model Temperature {
   orderItems   OrderItem[]
 }
 
-model Table {
-  id      Int    @id @default(autoincrement())
-  tableId Int    @unique
-  qrcode  String
-  token   String
-  status  String @default("use")
-  orderItem OrderItem[]
-  order     Order[]
-}
-
-
-
 model OrderItem {
   id            Int          @id @default(autoincrement())
   name          String
@@ -92,25 +80,22 @@ model OrderItem {
   tasteId       Int?        
   temperature   Temperature? @relation(fields: [temperatureId], references: [id])
   temperatureId Int?
-  order         Order?         @relation(fields: [orderId], references: [id])
+  order         Order?       @relation(fields: [orderId], references: [id])
   orderId       Int?         
   quantity      Int          @default(1)
   price         Float
   createdAt     DateTime     @default(now())
   status        String       @default("use")
-  table         Table        @relation(fields: [tableId], references: [tableId])
-  tableId       Int
+  customerName  String       
   comment       String
   beanType      String?      
   roastMethod   String?      
 }
 
-
 model Order {
   id            Int          @id @default(autoincrement())
-  table         Table        @relation(fields: [tableId], references: [tableId])
-  tableId       Int
   items         OrderItem[] 
+  customerName  String       // แทน tableId ด้วย customerName
   totalPrice    Float 
   status        String       @default("pending") 
   createdAt     DateTime     @default(now()) 

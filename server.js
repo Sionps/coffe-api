@@ -8,12 +8,14 @@ const http = require('http');
 const { Server } = require('socket.io')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { Client } = require('@line/bot-sdk');
+require('dotenv').config();
+
 
 const taste = require('./Controller/TasteController')
 const milk = require('./Controller/MilkController')
 const size = require('./Controller/SizeController')
 const menu = require('./Controller/MenuController')
-const table = require('./Controller/TableController')
 const orderItem = require('./Controller/OrderItemControllder')
 const report = require('./Controller/ReportController')
 
@@ -46,6 +48,25 @@ app.use(bodyParser.json())
 app.use(fileUpload())
 
 
+
+const lineConfig = {
+  channelAccessToken: process.env.LINE_ACCESS_TOKEN,
+  channelSecret: process.env.LINE_CHANNEL_SECRET,
+};
+
+const lineClient = new Client(lineConfig);
+
+app.post('/api/richmenu/link', async (req, res) => {
+  try {
+      const { userId } = req.body; 
+      const richMenuId = process.env.RICH_MENU_ID; 
+      await lineClient.linkRichMenuToUser(userId, richMenuId);
+      return res.send({ message: "Rich Menu linked successfully" });
+  } catch (error) {
+      console.log(error);
+      return res.status(500).send({ error: error.message });
+  }
+});
 
 
 app.post('/api/user/signIn', async (req, res) => {
@@ -159,22 +180,7 @@ app.put('/api/menu/update', (req, res) => {
     menu.update(req, res)
 })
 
-// ----- table ----- //
-app.post('/api/table/create', (req, res) => {
-  table.create(req, res)
-})
-app.get('/api/table/list', (req, res) => {
-  table.list(req, res)
-})
-app.delete('/api/table/remove/:id', (req, res) => {
-  table.remove(req, res)
-})
-app.get('/api/table/verify', (req, res) => {
-  table.verify(req, res); 
-})
-app.post('/api/table/print', (req, res) => {
-table.print(req, res)  
-})
+
 
 // ----- order ----- //
 app.post('/api/orderitem/create', (req, res) => {
