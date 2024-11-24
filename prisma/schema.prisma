@@ -95,7 +95,8 @@ model OrderItem {
 model Order {
   id            Int          @id @default(autoincrement())
   items         OrderItem[] 
-  customerName  String       // แทน tableId ด้วย customerName
+  customerName  String       
+  userId        String 
   totalPrice    Float 
   status        String       @default("pending") 
   createdAt     DateTime     @default(now()) 

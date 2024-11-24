@@ -4,6 +4,10 @@ const pdfkit = require('pdfkit');
 const fs = require('fs');
 const dayjs = require('dayjs');
 let io
+const { Client } = require('@line/bot-sdk'); // ใช้ LINE SDK
+const lineClient = new Client({
+  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
+});
 
 const initialize = (socketIo) => {
     io = socketIo;
@@ -138,6 +142,7 @@ module.exports = {
             data: {
               customerName: req.body.customerName,
               totalPrice: req.body.totalPrice,
+              userId: req.body.userId,
             },
           });
     
@@ -324,6 +329,18 @@ module.exports = {
             }
         });
 
+        const userId = req.body.userId; 
+        const message = {
+            to: userId,
+            messages: [
+                {
+                    type: 'text',
+                    text: `คำสั่งซื้อของคุณ ${order.customerName} ได้จัดเตรียมเสร็จเรียบร้อยแล้ว!`,
+                },
+            ],
+        };
+
+        await lineClient.pushMessage(userId, message.messages);
         return res.send({ message: "success", fileName: fileName });
     } catch (error) {
         return res.status(500).send({ error: error.message });
