@@ -5,8 +5,9 @@ const fs = require('fs');
 const dayjs = require('dayjs');
 let io
 const { Client } = require('@line/bot-sdk'); // ใช้ LINE SDK
+
 const lineClient = new Client({
-  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
+  channelAccessToken: process.env.LINE_ACCESS_TOKEN,
 });
 
 const initialize = (socketIo) => {
