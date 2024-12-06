@@ -100,7 +100,7 @@ model Order {
   totalPrice    Float 
   status        String       @default("pending") 
   createdAt     DateTime     @default(now()) 
-  bill          Bill?
+  bill          Bill? 
 }
 
 model Bill {

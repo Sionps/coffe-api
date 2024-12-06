@@ -4,8 +4,7 @@ const pdfkit = require('pdfkit');
 const fs = require('fs');
 const dayjs = require('dayjs');
 let io
-const { Client } = require('@line/bot-sdk'); // ใช้ LINE SDK
-
+const { Client } = require('@line/bot-sdk'); 
 const lineClient = new Client({
   channelAccessToken: process.env.LINE_ACCESS_TOKEN,
 });
@@ -258,10 +257,10 @@ module.exports = {
 
         doc.pipe(fs.createWriteStream(fileName));
 
-        // แสดงโลโก้ร้าน
+        
         const imageWidth = 20;
         const positionX = (paperWidth / 2) - (imageWidth / 2);
-        doc.image('uploads/' + 'promptpay.jpg', positionX, 5, {
+        doc.image('uploads/' + 'sion.webp', positionX, 5, {
             align: 'center',
             width: imageWidth,
             height: 20
