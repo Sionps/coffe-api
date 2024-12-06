@@ -260,7 +260,7 @@ module.exports = {
         
         const imageWidth = 20;
         const positionX = (paperWidth / 2) - (imageWidth / 2);
-        doc.image('uploads/' + 'sion.webp', positionX, 5, {
+        doc.image('uploads/' + 'sion.jpg', positionX, 5, {
             align: 'center',
             width: imageWidth,
             height: 20
